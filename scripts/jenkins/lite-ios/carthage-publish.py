@@ -29,7 +29,10 @@ def update_json_file(args):
     '''
     Update Carthage JSON file with CBL iOS release version on S3
     '''
-    CBL_IOS_S3_URL = 'https://packages.couchbase.com/releases/couchbase-lite-ios'
+    if args.staging == "true":
+        CBL_IOS_S3_URL = 'https://packages-staging.couchbase.com/releases/couchbase-lite-ios'
+    else:
+        CBL_IOS_S3_URL = 'https://packages.couchbase.com/releases/couchbase-lite-ios'
     CARTHAGE_PKG_NAME = 'couchbase-lite-carthage-{}-{}.zip'.format(args.edition, args.version)
 
     data_dict = parse_json_file(args.file)
@@ -52,6 +55,7 @@ def parse_args():
     parser.add_argument('--version', '-v', help='Carthage Version',
                         required=True)
     parser.add_argument('--file', '-f', help='JSON file', required=True)
+    parser.add_argument('--staging', '-s', help='Push to staging, true or false', required=True)
     parser.add_argument('--edition', '-e', help='Carthage Package Edition',
                         required=True)
     return parser.parse_args()
