@@ -66,17 +66,19 @@ function get_pkgs_from_internal_maven {
     #files
     local base_fl_name="${PRODUCT}-${RELEASE}-${BLD_NUM}"
     local aar_fl="${base_fl_name}.aar"
+    local ktx_aar_fl="${PRODUCT}-${RELEASE}-ktx-${BLD_NUM}.aar"
     local javadoc_fl="${base_fl_name}-javadoc.jar"
     local javasrc_fl="${base_fl_name}-sources.jar"
     local pom_fl="${base_fl_name}.pom"
 
     $(wget ${INTERNAL_MAVEN_URL}/${aar_fl})
+    $(wget ${INTERNAL_MAVEN_URL}/${ktx_aar_fl})
     $(wget ${INTERNAL_MAVEN_URL}/${javadoc_fl})
     $(wget ${INTERNAL_MAVEN_URL}/${javasrc_fl})
     $(wget ${INTERNAL_MAVEN_URL}/${pom_fl})
 
     # Ensure all required pkgs have been downloaded
-    if [[ ! -f ${aar_fl} ]] && [[ ! -f ${javadoc_fl} ]] && [[ ! -f ${javasrc_fl} ]] && [[ ! -f ${pom_fl} ]]; then
+    if [[ ! -f ${aar_fl} ]] && [[ ! -f ${ktx_aar_fl} ]]  && [[ ! -f ${javadoc_fl} ]] && [[ ! -f ${javasrc_fl} ]] && [[ ! -f ${pom_fl} ]]; then
         echo "Cannot retrieve all the required artifacts for publish!"
         exit 1
     fi
@@ -93,7 +95,7 @@ function maven_deploy {
     local APP_VERSION=${RELEASE_VERSION}
     local MVN_CMD="mvn --settings ./settings.xml -Dpublish.username=${PUBLISH_USERNAME} -Dpublish.password=${PUBLISH_PASSWORD} -DrepositoryId=${REPOSITORY_ID}"
 
-    if [[ ${PKG_FILE} == "${PRODUCT}-${RELEASE}-${BLD_NUM}.aar" ]]; then
+    if [[ "${PKG_FILE}" == *".aar"* ]]; then
         POM_OPTION='-DpomFile='${POM_FILE}
     else
         POM_OPTION='-DgeneratePom=false'
@@ -120,10 +122,11 @@ get_pkgs_from_internal_maven
 # file patterns
 base_fl_name="${PRODUCT}-${RELEASE}-${BLD_NUM}"
 aar_fl="${base_fl_name}.aar"
+ktx_aar_fl="${PRODUCT}-${RELEASE}-ktx-${BLD_NUM}.aar"
 javadoc_fl="${base_fl_name}-javadoc.jar"
 javasrc_fl="${base_fl_name}-sources.jar"
 
-RELEASE_FILES=$(ls ${aar_fl} ${javadoc_fl} ${javasrc_fl})
+RELEASE_FILES=$(ls ${aar_fl} ${ktx_aar_fl} ${javadoc_fl} ${javasrc_fl})
 echo "${RELEASE_FILES}\n\n"
 
 # Update default-pom.xml with release_version
