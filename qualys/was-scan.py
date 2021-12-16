@@ -165,49 +165,15 @@ def generate_report(qgc, args, WAS_SCAN_ID):
     <description><![CDATA[A simple scan report]]></description>
     <format>PDF</format>
     <type>WAS_SCAN_REPORT</type>
+    <template>
+    <id>68837</id>
+    </template>
     <config>
     <scanReport>
       <target>
     '''
     ServiceRequest_xml_footer = '''
       </target>
-      <display>
-    <contents> <ScanReportContent>DESCRIPTION</ScanReportContent>
-    <ScanReportContent>SUMMARY</ScanReportContent>
-    <ScanReportContent>GRAPHS</ScanReportContent>
-    <ScanReportContent>RESULTS</ScanReportContent>
-    <ScanReportContent>INDIVIDUAL_RECORDS</ScanReportContent>
-    <ScanReportContent>RECORD_DETAILS</ScanReportContent>
-    <ScanReportContent>ALL_RESULTS</ScanReportContent>
-    <ScanReportContent>APPENDIX</ScanReportContent>
-    </contents>
-    <graphs>
-    <ScanReportGraph>VULNERABILITIES_BY_SEVERITY</ScanReportGraph>
-    <ScanReportGraph>VULNERABILITIES_BY_GROUP</ScanReportGraph>
-    <ScanReportGraph>VULNERABILITIES_BY_OWASP</ScanReportGraph>
-    <ScanReportGraph>VULNERABILITIES_BY_WASC</ScanReportGraph>
-    <ScanReportGraph>SENSITIVE_CONTENTS_BY_GROUP</ScanReportGraph>
-    </graphs>
-    <groups> <ScanReportGroup>URL</ScanReportGroup>
-    <ScanReportGroup>GROUP</ScanReportGroup>
-    <ScanReportGroup>OWASP</ScanReportGroup>
-    <ScanReportGroup>WASC</ScanReportGroup>
-    <ScanReportGroup>STATUS</ScanReportGroup>
-    <ScanReportGroup>CATEGORY</ScanReportGroup>
-    <ScanReportGroup>QID</ScanReportGroup>
-        </groups>
-        <options>
-          <rawLevels>true</rawLevels>
-        </options>
-      </display>
-      <filters>
-        <status>
-            <ScanFindingStatus>NEW</ScanFindingStatus>
-            <ScanFindingStatus>ACTIVE</ScanFindingStatus>
-            <ScanFindingStatus>REOPENED</ScanFindingStatus>
-            <ScanFindingStatus>FIXED</ScanFindingStatus>
-        </status>
-      </filters>
       </scanReport>
       </config>
         </Report>
