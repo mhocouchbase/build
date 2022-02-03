@@ -49,6 +49,11 @@ case "${OSTYPE}" in
         *)  echo "unknown: $OSTYPE"
             exit 1;;
 esac
+
+#create artifacts dir for publishing to latestbuild
+ARTIFACTS_DIR=${WORKSPACE}/artifacts/${VERSION:0:2}/${VERSION}
+mkdir -p ${ARTIFACTS_DIR}
+
 mkdir -p ${WORKSPACE}/${BUILD_REL_TARGET} ${WORKSPACE}/${BUILD_DEBUG_TARGET}
 # Global define end
 
@@ -87,11 +92,13 @@ do
     then
         cd ${WORKSPACE}/${BUILD_DEBUG_TARGET}/install
         ${PKG_CMD} ${WORKSPACE}/${PACKAGE_NAME} *
+        cp ${WORKSPACE}/${PACKAGE_NAME} ${ARTIFACTS_DIR}/${PRODUCT}-${OS}-${FLAVOR}.${PKG_TYPE}
         DEBUG_PKG_NAME=${PACKAGE_NAME}
         cd ${WORKSPACE}
     else
         cd ${WORKSPACE}/${BUILD_REL_TARGET}/install
         ${PKG_CMD} ${WORKSPACE}/${PACKAGE_NAME} *
+        cp ${WORKSPACE}/${PACKAGE_NAME} ${ARTIFACTS_DIR}/${PRODUCT}-${OS}-${FLAVOR}.${PKG_TYPE}
         RELEASE_PKG_NAME=${PACKAGE_NAME}
         cd ${WORKSPACE}
     fi

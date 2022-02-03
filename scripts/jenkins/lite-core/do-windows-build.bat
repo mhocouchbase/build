@@ -23,6 +23,8 @@ echo %SHA_VERSION%
 
 set REL_PKG_DIR=MinSizeRel
 set DEBUG_PKG_DIR=Debug
+set ARTIFACTS_DIR=%WORKSPACE%\artifacts\%:SHA_VERSION~0,2%\%SHA_VERSION%
+mkdir "%ARTIFACTS_DIR%"
 
 for %%A in (%ARCHS%) do (
     set ARCH=%%A
@@ -33,10 +35,12 @@ for %%A in (%ARCHS%) do (
         set TARGET=!ARCH!_Debug
         call :bld_store %WORKSPACE%\build_!TARGET! !ARCH! Debug || goto :error
         call :pkg %WORKSPACE%\build_!TARGET!\%PRODUCT%\%DEBUG_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-debug-arm.zip ARM DEBUG || goto :error
+        copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-debug-arm.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%OS%-debug-arm.zip 
         rem MinSizeRel
         set TARGET=!ARCH!_MinSizeRel
         call :bld_store %WORKSPACE%\build_!TARGET! !ARCH! MinSizeRel || goto :error
         call :pkg %WORKSPACE%\build_!TARGET!\%PRODUCT%\%REL_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-arm.zip ARM RELEASE || goto :error
+        copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-arm.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%OS%-arm.zip
         goto :EOF
     ) else (
         rem Flavor: Debug
@@ -46,9 +50,13 @@ for %%A in (%ARCHS%) do (
         if "!ARCH!"=="Win32" (
             call :pkg %WORKSPACE%\build_cmake_store_!TARGET!\%PRODUCT%\%DEBUG_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32-winstore-debug.zip STORE_Win32 DEBUG || goto :error
             call :pkg %WORKSPACE%\build_!TARGET!\%PRODUCT%\%DEBUG_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32-debug.zip Win32 DEBUG || goto :error
+            copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32-winstore-debug.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%OS%-win32-winstore-debug.zip
+            copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32-debug.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32-debug.zip
         ) else (
             call :pkg %WORKSPACE%\build_cmake_store_!TARGET!\%PRODUCT%\%DEBUG_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64-winstore-debug.zip STORE_Win64 DEBUG || goto :error
             call :pkg %WORKSPACE%\build_!TARGET!\%PRODUCT%\%DEBUG_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64-debug.zip Win64 DEBUG || goto :error
+            copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64-winstore-debug.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%OS%-win64-winstore-debug.zip
+            copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64-debug.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64-debug.zip
         )
         rem Flavor: MinSizeRel
         set TARGET=!ARCH!_MinSizeRel
@@ -60,9 +68,13 @@ for %%A in (%ARCHS%) do (
         if "!ARCH!"=="Win32" (
             call :pkg %WORKSPACE%\build_cmake_store_!TARGET!\%PRODUCT%\%REL_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32-winstore.zip STORE_Win32 RELEASE || goto :error
             call :pkg %WORKSPACE%\build_!TARGET!\%PRODUCT%\%REL_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32.zip Win32 RELEASE || goto :error
+            copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32-winstore.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%OS%-win32-winstore.zip
+            copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win32.zip
         ) else (
             call :pkg %WORKSPACE%\build_cmake_store_!TARGET!\%PRODUCT%\%REL_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64-winstore.zip STORE_Win64 RELEASE || goto :error
             call :pkg %WORKSPACE%\build_!TARGET!\%PRODUCT%\%REL_PKG_DIR% %PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64.zip Win64 RELEASE || goto :error
+            copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64-winstore.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%OS%-win64-winstore.zip
+            copy %WORKSPACE%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64.zip %ARTIFACTS_DIR%\%PRODUCT%-%VERSION%-%SHA_VERSION%-%OS%-win64.zip
         )
     )
 )
