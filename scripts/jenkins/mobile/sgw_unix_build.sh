@@ -66,7 +66,7 @@ function get_dependencies
                 export PATH=${CBDEPS_DIR}/miniforge3-${MINIFORGE_VERSION}/bin:$PATH
             fi
         fi
-        pip3 install PyInstaller==4.5.1
+        pip3 install PyInstaller
     fi
     python --version
 }
