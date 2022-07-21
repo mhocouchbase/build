@@ -38,7 +38,7 @@ AWS_PROFILE="cb-qe"
 REGION="us-east-1"
 SUBNET_ID="subnet-d0d9bab5"
 INTERNAL_CIDR="172.0.0.0/8"
-EC2_TYPE="c6g.xlarge"
+EC2_TYPE="m6g.xlarge"
 KEYPAIR_NAME="build_sanity_test"
 
 prep_env() {
