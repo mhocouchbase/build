@@ -3,23 +3,26 @@
     A tool for changing the version, and release notes, of a given version of the Couchbase Lite nuget packages
 .DESCRIPTION
     This tool will unzip the package, change the nuget version and release notes, then repackage in the same directory
+.PARAMETER Product
+    The product name,i.e. couchbase-lite-net, couchbase-lite-net-extensions
 .PARAMETER InVersion
-    The existing version of the library to modify
+    The existing version of the libraries to modify
 .PARAMETER OutVersion
-    The version to modify the library to
+    The version to modify the libraries to
 .PARAMETER ReleaseNotes
     If supplied, the new release notes will be read from the specified file and replaced in the package metadata
     If specified, will push to Couchbase's internal feed
 .EXAMPLE
-    C:\PS> .\PromoteBuild.ps1 -InVersion 2.0.0-b0001 -OutVersion 2.0.0-db001
-    Changes the version of the library from 2.0.0-b0001 to 2.0.0-db001
+    C:\PS> .\PromoteBuild.ps1 -Product couchbase-lite-net -InVersion 2.0.0-b0001 -OutVersion 2.0.0-db001
+    Changes couchbase-lite-net libraries's version from 2.0.0-b0001 to 2.0.0-db001
 .EXAMPLE
-    C:\PS> .\PromoteBuild.ps1 -InVersion 2.0.0-b0001 -OutVersion 2.0.0 -ReleaseNotes notes.txt
-    Changes the version of the library from 2.0.0-b0001 to 2.0.0 and modifies the release notes to contain the content in notes.txt
+    C:\PS> .\PromoteBuild.ps1 -Product couchbase-lite-net -InVersion 2.0.0-b0001 -OutVersion 2.0.0 -ReleaseNotes notes.txt
+    Changes couchbase-lite-net libraries's version from 2.0.0-b0001 to 2.0.0 and modifies the release notes to contain the content in notes.txt
 #>
 param(
-    [Parameter(Mandatory=$true, HelpMessage="The existing version of the library to modify")][string]$InVersion,
-    [Parameter(Mandatory=$true, HelpMessage="The version to modify the library to")][string]$OutVersion,
+    [Parameter(Mandatory=$true, HelpMessage="The product")][string]$Product,
+    [Parameter(Mandatory=$true, HelpMessage="The existing version of the libraries to modify")][string]$InVersion,
+    [Parameter(Mandatory=$true, HelpMessage="The version to modify the libraries to")][string]$OutVersion,
     [string]$ReleaseNotes
 )
 
@@ -53,29 +56,32 @@ try {
     $Version31Up = -not $Version1 -and -not $InVersion.StartsWith("2") -and -not $InVersion.StartsWith("3.0")
     $buildlessVersion = $InVersion.Split("-")[0]
     $numericBuildNumber = $InVersion.Split("-")[1].TrimStart('b', '0')
-    if($Version1) {
-        $package_names = "Couchbase.Lite","Couchbase.Lite.Listener","Couchbase.Lite.Listener.Bonjour","Couchbase.Lite.Storage.CustomSQLite","Couchbase.Lite.Storage.SQLCipher","Couchbase.Lite.Storage.ForestDB","Couchbase.Lite.Storage.SystemSQLite"
-        foreach($package in $package_names) {
-            Write-Host "Downloading http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-lite-net/$buildlessVersion/$numericBuildNumber/$package.$InVersion.nupkg"
-            Invoke-WebRequest "http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-lite-net/$buildlessVersion/$numericBuildNumber/$package.$InVersion.nupkg" -OutFile "${package}.${InVersion}.nupkg"
+
+    switch ($Product) {
+        "couchbase-lite-net" {
+            if ($Version31Up) {
+                $package_names = "Couchbase.Lite","Couchbase.Lite.Enterprise","Couchbase.Lite.Support.Android","Couchbase.Lite.Support.iOS","Couchbase.Lite.Support.NetDesktop","Couchbase.Lite.Support.UWP","Couchbase.Lite.Support.WinUI","Couchbase.Lite.Enterprise.Support.Android","Couchbase.Lite.Enterprise.Support.iOS","Couchbase.Lite.Enterprise.Support.NetDesktop","Couchbase.Lite.Enterprise.Support.UWP","Couchbase.Lite.Enterprise.Support.WinUI"
+                $snupkg_names = "Couchbase.Lite","Couchbase.Lite.Enterprise"
+            } else {
+                $package_names = "Couchbase.Lite","Couchbase.Lite.Enterprise","Couchbase.Lite.Support.Android","Couchbase.Lite.Support.iOS","Couchbase.Lite.Support.NetDesktop","Couchbase.Lite.Support.UWP","Couchbase.Lite.Enterprise.Support.Android","Couchbase.Lite.Enterprise.Support.iOS","Couchbase.Lite.Enterprise.Support.NetDesktop","Couchbase.Lite.Enterprise.Support.UWP"
+                $snupkg_names = ""
+            }
         }
-    } elseif ($Version31Up) {
-        $package_names = "Couchbase.Lite","Couchbase.Lite.Enterprise","Couchbase.Lite.Support.Android","Couchbase.Lite.Support.iOS","Couchbase.Lite.Support.NetDesktop","Couchbase.Lite.Support.UWP","Couchbase.Lite.Support.WinUI","Couchbase.Lite.Enterprise.Support.Android","Couchbase.Lite.Enterprise.Support.iOS","Couchbase.Lite.Enterprise.Support.NetDesktop","Couchbase.Lite.Enterprise.Support.UWP","Couchbase.Lite.Enterprise.Support.WinUI"
-        $snupkg_names = "Couchbase.Lite","Couchbase.Lite.Enterprise"
-        foreach($package in $package_names) {
-            Write-Host "Downloading https://proget.sc.couchbase.com/nuget/CI/package/$package/$InVersion..."
-            Invoke-WebRequest https://proget.sc.couchbase.com/nuget/CI/package/$package/$InVersion -OutFile "${package}.${InVersion}.nupkg"
+        "couchbase-lite-net-extensions" {
+            $package_names = "Couchbase.Lite.Extensions"
+            $snupkg_names = "Couchbase.Lite.Extensions"
         }
-        foreach($snupkg in $snupkg_names) {
-            Write-Host "Downloading http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-lite-net/${buildlessVersion}/${numericBuildNumber}/${snupkg}.${InVersion}.snupkg"
-            Invoke-WebRequest http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-lite-net/${buildlessVersion}/${numericBuildNumber}/${snupkg}.${InVersion}.snupkg -OutFile "${snupkg}.${InVersion}.snupkg"
+        default {
+            Write-Host "$Product is not supported."
         }
-    } else {
-        $package_names = "Couchbase.Lite","Couchbase.Lite.Enterprise","Couchbase.Lite.Support.Android","Couchbase.Lite.Support.iOS","Couchbase.Lite.Support.NetDesktop","Couchbase.Lite.Support.UWP","Couchbase.Lite.Enterprise.Support.Android","Couchbase.Lite.Enterprise.Support.iOS","Couchbase.Lite.Enterprise.Support.NetDesktop","Couchbase.Lite.Enterprise.Support.UWP"
-        foreach($package in $package_names) {
-            Write-Host "Downloading https://proget.sc.couchbase.com/nuget/Internal/package/$package/$InVersion..."
-            Invoke-WebRequest https://proget.sc.couchbase.com/nuget/Internal/package/$package/$InVersion -OutFile "${package}.${InVersion}.nupkg"
-        }
+    }
+    foreach($package in $package_names) {
+        Write-Host "Downloading https://proget.sc.couchbase.com/nuget/CI/package/$package/$InVersion..."
+        Invoke-WebRequest https://proget.sc.couchbase.com/nuget/CI/package/$package/$InVersion -OutFile "${package}.${InVersion}.nupkg"
+    }
+    foreach($snupkg in $snupkg_names) {
+        Write-Host "Downloading http://latestbuilds.service.couchbase.com/builds/latestbuilds/${Product}/${buildlessVersion}/${numericBuildNumber}/${snupkg}.${InVersion}.snupkg"
+        Invoke-WebRequest http://latestbuilds.service.couchbase.com/builds/latestbuilds/${Product}/${buildlessVersion}/${numericBuildNumber}/${snupkg}.${InVersion}.snupkg -OutFile "${snupkg}.${InVersion}.snupkg"
     }
 
     foreach($file in (Get-ChildItem $pwd -Filter *.*nupkg)) {
