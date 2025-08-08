@@ -13,7 +13,6 @@
 #
 #        TEST_OPTIONS       `-race 4 -cpu`
 #        GO_REL             1.5.3 (Currently supports 1.4.1, 1.5.2, 1.5.3)
-#        MINIFORGE_VERSION  4.12.0-2
 #
 #    This script supports building branches 1.3.0 and newer that uses repo manifest.
 #    It will purely perform these 2 tasks:
@@ -32,7 +31,7 @@
 function usage
     {
     echo "Incorrect parameters..."
-    echo -e "\nUsage:  ${0}   branch_name  distro  version  bld_num  edition  commit_sha  [ GO_REL ] [ MINIFORGE_VERSION ] \n\n"
+    echo -e "\nUsage:  ${0}   branch_name  distro  version  bld_num  edition  commit_sha  [ GO_REL ] \n\n"
     }
 
 function get_dependencies
@@ -53,21 +52,17 @@ function get_dependencies
 
     go version
 
-    if [ -n ${MINIFORGE_VERSION} ]; then
-        if [[ "${ARCH}" == "arm64" ]]; then
-            echo "miniconda is not supported on ${ARCH}."
-            echo "using default python on the system."
-        else
-            if [ ! -d ${CBDEPS_DIR}/miniforge3-${MINIFORGE_VERSION} ]; then
-                ./cbdep install miniforge3 ${MINIFORGE_VERSION} -d ${CBDEPS_DIR}
-                export PATH=${CBDEPS_DIR}/miniforge3-${MINIFORGE_VERSION}/bin:$PATH
-            else
-                export PATH=${CBDEPS_DIR}/miniforge3-${MINIFORGE_VERSION}/bin:$PATH
-            fi
-        fi
-        pip3 install PyInstaller==4.5.1
+    if [[ -f "${SGW_DIR}/uv.lock" ]]; then
+      PYTHON_VERSION=$(grep -oE 'python = "[^"]+"' "${SGW_DIR}/uv.lock" | sed -E 's/.*"==?([0-9]+(\.[0-9]+){1,2})\.?\*?"/\1/')
     fi
-    python --version
+    # Default to 3.9 if not set
+    PYTHON_VERSION="${PYTHON_VERSION:-3.9}"
+
+    uv venv --python ${PYTHON_VERSION} ./mypyenv
+    source ./mypyenv/bin/activate
+    python -m ensurepip --upgrade --default-pip
+    pip install pyinstaller
+
 }
 
 function go_test
@@ -76,7 +71,7 @@ function go_test
     echo ........................ running sync_gateway test.sh
 
     pushd ${SGW_DIR}
-    go test ${GO_EDITION_OPTION} ./...
+    GOMAXPROCS=3 go test ${GO_EDITION_OPTION} ./...
     test_result=$?
     if [ ${test_result} -ne "0" ]; then
         echo "########################### FAIL! sync-gateway Unit test results = ${test_result}"
@@ -98,7 +93,7 @@ function go_build
     echo ======== building ${PRODUCT_NAME} ===============================
     pushd ${SGW_DIR}
 
-    go install ${GO_EDITION_OPTION} ./...
+    GOMAXPROCS=3 go install ${GO_EDITION_OPTION} ./...
 
     popd
 }
@@ -205,6 +200,8 @@ else
 fi
 
 export GOOS ; export EXEC
+echo "ulimit: "
+ulimit -n
 
 #install dependent tools, i.e. golang, python
 get_dependencies
@@ -379,7 +376,14 @@ cp    ${DEST_DIR}/${EXEC}                ${STAGING}/bin/
 cp    ${SGW_DIR}/service/sync_gateway_*  ${STAGING}/service
 
 echo cd ${BLD_DIR}' => ' ./${PKGR} ${PREFIX} ${PREFIXP} ${VERSION}-${BLD_NUM} ${REPO_SHA} ${PLATFORM} ${ARCHP}
-cd   ${BLD_DIR}   ;   ./${PKGR} ${PREFIX} ${PREFIXP} ${VERSION}-${BLD_NUM} ${REPO_SHA} ${PLATFORM} ${ARCHP}
+cd   ${BLD_DIR}
+if [[ $DISTRO =~ ubuntu ]]; then
+    docker run --rm --pull=always --volumes-from $(uname -n) --workdir `pwd` --user 1000:1000 \
+        couchbasebuild/server-deb-sidecar:latest \
+        ruby ${PKGR} ${PREFIX} ${PREFIXP} ${VERSION}-${BLD_NUM} ${REPO_SHA} ${PLATFORM} ${ARCHP}
+else
+        ruby ${PKGR} ${PREFIX} ${PREFIXP} ${VERSION}-${BLD_NUM} ${REPO_SHA} ${PLATFORM} ${ARCHP}
+fi
 
 echo  ======= prep upload sync_gateway =========
 cd ${SGW_DIR}
