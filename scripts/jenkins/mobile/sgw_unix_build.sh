@@ -52,22 +52,6 @@ function get_dependencies
     export PATH=${GOROOT}/bin:$PATH
 
     go version
-
-    if [ -n ${MINIFORGE_VERSION} ]; then
-        if [[ "${ARCH}" == "arm64" ]]; then
-            echo "miniconda is not supported on ${ARCH}."
-            echo "using default python on the system."
-        else
-            if [ ! -d ${CBDEPS_DIR}/miniforge3-${MINIFORGE_VERSION} ]; then
-                ./cbdep install miniforge3 ${MINIFORGE_VERSION} -d ${CBDEPS_DIR}
-                export PATH=${CBDEPS_DIR}/miniforge3-${MINIFORGE_VERSION}/bin:$PATH
-            else
-                export PATH=${CBDEPS_DIR}/miniforge3-${MINIFORGE_VERSION}/bin:$PATH
-            fi
-        fi
-        pip3 install PyInstaller==4.5.1
-    fi
-    python --version
 }
 
 function go_test
@@ -205,6 +189,8 @@ else
 fi
 
 export GOOS ; export EXEC
+echo "ulimit: "
+ulimit -n
 
 #install dependent tools, i.e. golang, python
 get_dependencies
@@ -347,7 +333,11 @@ COLLECTINFO_DIR=${SGW_DIR}/tools
 COLLECTINFO_DIST=${COLLECTINFO_DIR}/dist/${COLLECTINFO_NAME}
 
 pushd ${COLLECTINFO_DIR}
+uv venv ./mypyenv
+source ./mypyenv/bin/activate
+pip install pyinstaller
 pyinstaller --onefile ${COLLECTINFO_NAME}
+deactivate
 if [[ -e ${COLLECTINFO_DIST} ]]
   then
     echo "..............................SGCOLLECT_INFO Success! Output is: ${COLLECTINFO_DIST}"
