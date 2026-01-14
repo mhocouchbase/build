@@ -188,6 +188,14 @@ if "%GO_MOD_BUILD%" == "false" (
 set GOPROXY=http://goproxy.build.couchbase.com,https://proxy.golang.org
 set GOPRIVATE=github.com/couchbaselabs/go-fleecedelta
 pushd %SGW_DIR%
+echo %PATH%
+where gcc
+gcc --version
+go env CC
+go env CGO_ENABLED
+go env GOROOT
+go version
+where go
 go install %GO_EDITION_OPTION% .\...
 popd
 
